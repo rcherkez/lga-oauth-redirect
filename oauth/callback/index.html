@@ -3,125 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LGA Employee OAuth Redirect</title>
+    <title>LGA Employee OAuth Response</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            padding: 20px;
             color: white;
         }
         .container {
-            text-align: center;
             background: rgba(255, 255, 255, 0.1);
             padding: 2rem;
             border-radius: 1rem;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
         }
         .logo {
             font-size: 3rem;
             margin-bottom: 1rem;
+            text-align: center;
         }
         .title {
             font-size: 1.5rem;
             margin-bottom: 1rem;
             font-weight: 600;
+            text-align: center;
         }
-        .message {
-            margin-bottom: 2rem;
-            opacity: 0.9;
+        .response-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .fallback {
-            margin-top: 2rem;
-            padding: 1rem;
+        .parameter {
+            margin: 10px 0;
+            padding: 10px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 0.5rem;
+            border-radius: 5px;
         }
-        .fallback a {
+        .parameter-name {
+            font-weight: bold;
             color: #ffd700;
-            text-decoration: none;
-            font-weight: 600;
         }
-        .fallback a:hover {
-            text-decoration: underline;
+        .parameter-value {
+            color: #90EE90;
+            margin-top: 5px;
+        }
+        .error {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        .success {
+            color: #51cf66;
+            font-weight: bold;
+        }
+        .warning {
+            color: #ffd43b;
+            font-weight: bold;
+        }
+        .redirect-button {
+            background: #ffd700;
+            color: black;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .redirect-button:hover {
+            background: #ffed4e;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="logo">🏗️</div>
-        <div class="title">LGA Employee</div>
-        <div class="message">Redirecting to your app...</div>
-        <div class="spinner"></div>
-        <div class="fallback">
-            <p>If you're not redirected automatically, <a href="#" id="manualRedirect">click here</a></p>
+        <div class="title">Service Fusion OAuth Response</div>
+        <div class="message">This page shows the OAuth response from Service Fusion</div>
+    </div>
+
+    <!-- OAuth Response Display -->
+    <div class="container">
+        <h3>📡 OAuth Response Parameters:</h3>
+        <div id="oauthParams" class="response-section">
+            Loading OAuth parameters...
         </div>
     </div>
 
-   <script>
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    
-    console.log('OAuth callback received:', { code, state });
-    
-    // Construct the custom URL scheme for the iOS app
-    const appURL = `lga://oauth/callback?code=${code}&state=${state}`;
-    
-    console.log('Redirecting to app:', appURL);
-    
-    // Function to redirect to the app
-    function redirectToApp() {
-        // Method 1: Try window.location first
-        try {
-            window.location.href = appURL;
-        } catch (e) {
-            console.log('Method 1 failed:', e);
-            
-            // Method 2: Create a hidden iframe
-            try {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = appURL;
-                document.body.appendChild(iframe);
-                console.log('Method 2: iframe created');
-            } catch (e2) {
-                console.log('Method 2 failed:', e2);
-            }
+    <!-- Full URL Display -->
+    <div class="container">
+        <h3>🔗 Complete Redirect URL:</h3>
+        <div id="fullURL" class="response-section">
+            Loading URL...
+        </div>
+    </div>
+
+    <!-- Debug Info -->
+    <div class="container">
+        <h3>🐛 Debug Information:</h3>
+        <div id="debugInfo" class="response-section">
+            Loading debug info...
+        </div>
+    </div>
+
+    <!-- Manual Redirect Options -->
+    <div class="container">
+        <h3>📱 Manual Actions:</h3>
+        <p>If you want to test the app redirect, use these buttons:</p>
+        <a href="#" id="appRedirect" class="redirect-button">Redirect to App (lga://)</a>
+        <a href="#" id="testRedirect" class="redirect-button">Test with Sample Data</a>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        const errorDescription = urlParams.get('error_description');
+        
+        // Display OAuth parameters
+        const oauthParamsDiv = document.getElementById('oauthParams');
+        if (error) {
+            oauthParamsDiv.innerHTML = `
+                <div class="parameter">
+                    <div class="parameter-name">❌ Error:</div>
+                    <div class="parameter-value error">${error}</div>
+                </div>
+                <div class="parameter">
+                    <div class="parameter-name">📝 Error Description:</div>
+                    <div class="parameter-value error">${errorDescription || 'No description provided'}</div>
+                </div>
+            `;
+        } else if (code && state) {
+            oauthParamsDiv.innerHTML = `
+                <div class="parameter">
+                    <div class="parameter-name">✅ Authorization Code:</div>
+                    <div class="parameter-value success">${code}</div>
+                </div>
+                <div class="parameter">
+                    <div class="parameter-name">🔒 State Parameter:</div>
+                    <div class="parameter-value success">${state}</div>
+                </div>
+            `;
+        } else {
+            oauthParamsDiv.innerHTML = `
+                <div class="parameter">
+                    <div class="parameter-name">⚠️ Missing Parameters:</div>
+                    <div class="parameter-value warning">
+                        Code: ${code || 'NULL'}
+                        State: ${state || 'NULL'}
+                    </div>
+                </div>
+            `;
         }
-    }
-    
-    // Auto-redirect after a short delay
-    setTimeout(redirectToApp, 1000);
-    
-    // Manual redirect button
-    document.getElementById('manualRedirect').addEventListener('click', function(e) {
-        e.preventDefault();
-        redirectToApp();
-    });
-    
-    // Log for debugging
-    console.log('Page loaded, will redirect in 1 second');
-</script>
+        
+        // Display full URL
+        document.getElementById('fullURL').textContent = window.location.href;
+        
+        // Display debug info
+        document.getElementById('debugInfo').textContent = `
+URL Components:
+- Protocol: ${window.location.protocol}
+- Host: ${window.location.host}
+- Pathname: ${window.location.pathname}
+- Search: ${window.location.search}
+- Hash: ${window.location.hash}
+
+Query Parameters:
+${Array.from(urlParams.entries()).map(([key, value]) => `${key}: ${value}`).join('\n')}
+
+User Agent: ${navigator.userAgent}
+Timestamp: ${new Date().toISOString()}
+        `;
+        
+        // Manual redirect to app
+        document.getElementById('appRedirect').addEventListener('click', function(e) {
+            e.preventDefault();
+            const appURL = `lga://oauth/callback?code=${code || 'test_code'}&state=${state || 'test_state'}`;
+            alert(`Attempting to redirect to: ${appURL}`);
+            window.location.href = appURL;
+        });
+        
+        // Test redirect with sample data
+        document.getElementById('testRedirect').addEventListener('click', function(e) {
+            e.preventDefault();
+            const testURL = `lga://oauth/callback?code=test_authorization_code_123&state=test_state_456`;
+            alert(`Testing redirect with: ${testURL}`);
+            window.location.href = testURL;
+        });
+        
+        // Log everything to console
+        console.log('🚨🚨🚨 OAuth Response Page Loaded');
+        console.log('🚨🚨🚨 Full URL:', window.location.href);
+        console.log('🚨🚨🚨 Code:', code);
+        console.log('🚨🚨🚨 State:', state);
+        console.log('🚨🚨🚨 Error:', error);
+        console.log('🚨🚨🚨 Error Description:', errorDescription);
+        console.log('🚨🚨🚨 All URL Parameters:', Object.fromEntries(urlParams));
+    </script>
 </body>
 </html>
