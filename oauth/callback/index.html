@@ -84,7 +84,7 @@
         const state = urlParams.get('state');
         
         // Construct the custom URL scheme for the iOS app
-        const appURL = `organization.LGA-Employee://oauth/callback?code=${code}&state=${state}`;
+        const appURL = `organization.LGA_Employee://oauth/callback?code=${code}&state=${state}`;
         
         // Try to redirect to the app
         function redirectToApp() {
