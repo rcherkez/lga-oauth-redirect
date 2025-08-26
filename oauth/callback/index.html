@@ -86,7 +86,7 @@
     console.log('OAuth callback received:', { code, state });
     
     // Construct the custom URL scheme for the iOS app
-    const appURL = `organization.LGA_Employee://oauth/callback?code=${code}&state=${state}`;
+    const appURL = `lga://oauth/callback?code=${code}&state=${state}`;
     
     console.log('Redirecting to app:', appURL);
     
