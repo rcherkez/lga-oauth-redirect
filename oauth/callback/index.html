@@ -77,41 +77,51 @@
         </div>
     </div>
 
-    <script>
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        // Construct the custom URL scheme for the iOS app
-        const appURL = `organization.LGA_Employee://oauth/callback?code=${code}&state=${state}`;
-        
-        // Try to redirect to the app
-        function redirectToApp() {
-            // Create a hidden iframe to trigger the app
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = appURL;
-            document.body.appendChild(iframe);
+   <script>
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    console.log('OAuth callback received:', { code, state });
+    
+    // Construct the custom URL scheme for the iOS app
+    const appURL = `organization.LGA_Employee://oauth/callback?code=${code}&state=${state}`;
+    
+    console.log('Redirecting to app:', appURL);
+    
+    // Function to redirect to the app
+    function redirectToApp() {
+        // Method 1: Try window.location first
+        try {
+            window.location.href = appURL;
+        } catch (e) {
+            console.log('Method 1 failed:', e);
             
-            // Also try window.location as fallback
-            setTimeout(() => {
-                window.location.href = appURL;
-            }, 100);
+            // Method 2: Create a hidden iframe
+            try {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = appURL;
+                document.body.appendChild(iframe);
+                console.log('Method 2: iframe created');
+            } catch (e2) {
+                console.log('Method 2 failed:', e2);
+            }
         }
-        
-        // Auto-redirect after a short delay
-        setTimeout(redirectToApp, 1500);
-        
-        // Manual redirect button
-        document.getElementById('manualRedirect').addEventListener('click', function(e) {
-            e.preventDefault();
-            redirectToApp();
-        });
-        
-        // Log for debugging
-        console.log('OAuth callback received:', { code, state });
-        console.log('Redirecting to app:', appURL);
-    </script>
+    }
+    
+    // Auto-redirect after a short delay
+    setTimeout(redirectToApp, 1000);
+    
+    // Manual redirect button
+    document.getElementById('manualRedirect').addEventListener('click', function(e) {
+        e.preventDefault();
+        redirectToApp();
+    });
+    
+    // Log for debugging
+    console.log('Page loaded, will redirect in 1 second');
+</script>
 </body>
 </html>
